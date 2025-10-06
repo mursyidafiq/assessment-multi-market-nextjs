@@ -1,36 +1,71 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+Multi Market — Backend demo
 
-## Getting Started
+What this is
+- A small Next.js app demonstrating a multi-market backend where each market (e.g. MY, SG, AU)
+   can reuse or extend feature documents (Header, Footer, Banner, How It Works).
 
-First, run the development server:
+Quick start (5 minutes)
+1. Requirements
+    - Node 18+
+    - MongoDB running locally (or a remote URI)
 
+2. Install
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+3. Configure
+Create a file named `.env.local` in the project root with at least:
+```env
+MONGODB_URI=mongodb://localhost:27017/multimarket
+NEXT_PUBLIC_BASE_URL=http://localhost:3000
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+4. Run dev server
+```bash
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+5. Seed demo data (optional, idempotent)
+```bash
+# POST to seed sample markets/features
+curl -X POST http://localhost:3000/api/seed
+```
 
-## Learn More
+Useful routes
+- GET /api/markets
+   - returns [{ code, name }, ...]
+- GET /api/markets/{code}
+   - returns { market: { code, name }, features: { header, footer, banner, howItWorks } }
+   - features are resolved and merged according to reuse rules
+- POST /api/markets
+   - create or upsert a market (code, name, headerFrom, footerFrom, bannerFrom, howItWorksFrom)
+- PATCH /api/markets
+   - partial update of a market (provide code + fields to change)
+- POST /api/media/upload
+   - multipart/form-data upload, saves to public/media/uploads and returns { url }
 
-To learn more about Next.js, take a look at the following resources:
+Interactive docs
+- Open the built-in API docs: http://localhost:3000/docs
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+How reuse and extension works (short)
+- Each market document points to feature sources via fields like `headerFrom` or `howItWorksFrom`.
+- Feature documents (Header, Footer, Banner, HowItWorks) live separately and may have `baseOf` to indicate they're a base for other markets.
+- When serving a market, the server merges base → override so a derived market can change one field or extend an array (for example, add a `video` to a specific How It Works step) without replacing the entire feature.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Examples (curl)
+- List markets
+```bash
+curl http://localhost:3000/api/markets
+```
+- Get a market with features
+```bash
+curl http://localhost:3000/api/markets/AU
+```
+- Create/upsert a market
+```bash
+curl -X POST -H "Content-Type: application/json" -d '{"code":"VN","name":"Vietnam","howItWorksFrom":"MY"}' http://localhost:3000/api/markets
+```
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Swagger API Docs
+- The repo includes a small OpenAPI spec and a docs page (`/docs`).
