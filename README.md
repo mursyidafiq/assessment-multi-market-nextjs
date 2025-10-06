@@ -4,6 +4,8 @@ What this is
 - A small Next.js app demonstrating a multi-market backend where each market (e.g. MY, SG, AU)
    can reuse or extend feature documents (Header, Footer, Banner, How It Works).
 
+Tech Stacks: Next.js, MongoDB, TailwindCSS
+
 Quick start (5 minutes)
 1. Requirements
     - Node 18+
